@@ -14,7 +14,7 @@ body:
     id: nim
     attributes:
       label: NIM
-      placeholder: "0110224001"
+      placeholder: "110225004"
     validations:
       required: true
   - type: input
