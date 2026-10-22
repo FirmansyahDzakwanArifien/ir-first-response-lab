@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: Video panduan praktikum
+    url: https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/releases/download/panduan-v1/Panduan_Praktikum_IR_First_Response.mp4
+    about: Tonton peragaan lengkap (±4,5 menit) sebelum membuka kasus.
   - name: Panduan mahasiswa
     url: https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/blob/main/docs/panduan-mahasiswa.md
     about: Baca alur simulasi, format perintah, dan tips analisis sebelum memulai.
