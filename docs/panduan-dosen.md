@@ -73,6 +73,24 @@ skenario, skor per komponen, benar/salah per butir, keterlambatan) dan `rekap/ri
 (rata-rata per skenario dan persentase benar per butir — untuk melihat topik yang belum dikuasai
 kelas).
 
+## Melihat laporan setiap mahasiswa
+
+Ada tiga cara, dari yang tercepat:
+
+1. **Di issue.** Setiap kasus adalah satu issue: keputusan (`/respond`), jawaban (`/submit`), dan skor
+   per butir terlihat langsung. Filter label `selesai` untuk kasus yang sudah dinilai.
+2. **Artifact debrief** di tautan balasan bot (atau tab *Actions* → run → *Artifacts*), tersimpan 90 hari.
+3. **Seluruh kelas sekaligus** — dibangun ulang dari jawaban di issue, tidak bergantung masa simpan artifact:
+
+   ```bash
+   python -m irsim laporan --repo OWNER/REPO
+   ```
+
+   Hasilnya folder `laporan/` berisi `index.html` (tabel kelas: skor, grade, status tepat waktu, tautan)
+   dan satu folder debrief per mahasiswa (HTML + Markdown + `skor.json`). Bila skor hasil bangun ulang
+   berbeda dari skor yang tercatat — misalnya komentar `/submit` disunting setelah dinilai — NIM-nya
+   ditampilkan di terminal.
+
 ## Penanganan kasus khusus
 
 - **Mahasiswa salah mengisi NIM / perlu mengulang:** tutup issue-nya dan beri label `ditolak`;

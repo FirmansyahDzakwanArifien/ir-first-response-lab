@@ -6,15 +6,19 @@
     python -m irsim selftest               uji menyeluruh seluruh skenario
     python -m irsim setup --repo OWNER/REPO   buat label issue
     python -m irsim rekap --repo OWNER/REPO   rekap nilai ke CSV
+    python -m irsim laporan --repo OWNER/REPO laporan lengkap seluruh mahasiswa + indeks HTML
 """
 from __future__ import annotations
 
 import argparse
 import csv
+import html
 import json
+import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import quote
 
@@ -24,7 +28,7 @@ from . import render, report
 from .core import (LETTERS, ROOT, SCENARIOS, Case, assign_scenario, grade_for, load_bank, load_course, load_key,
                    now_wib, seal_bank, unseal_bank)
 from .desk import (BOT, LABEL_CASE, LABEL_DONE, LABEL_F1, LABEL_F2, LABEL_LATE, LABEL_REJECT, MARK,
-                   correct_letters, facts_for)
+                   correct_letters, facts_for, parse_submission)
 from .gh import GitHub
 from .grading import grade
 from .scenarios import assemble
@@ -211,6 +215,69 @@ def cmd_rekap(args):
     print(f"{len(rows)} laporan → {out / 'rekap_nilai.csv'} dan {out / 'ringkasan.md'}")
 
 
+def cmd_laporan(args):
+    """Bangun ulang debrief setiap mahasiswa dari jawaban /submit di issue (tidak bergantung artifact)."""
+    course, key = load_course(), load_key()
+    bank = load_bank(key)
+    gh = GitHub(args.repo, _token())
+    out = Path(args.out)
+    shutil.rmtree(out, ignore_errors=True)
+    out.mkdir(parents=True)
+    rows = []
+    for issue in gh.issues(LABEL_CASE):
+        final, final_submit, submit = None, None, None
+        for c in gh.comments(issue["number"]):
+            body = c["body"] or ""
+            if c["user"]["login"] == BOT:
+                m = MARK.search(body)
+                if m and json.loads(m.group(1)).get("result"):
+                    final, final_submit = json.loads(m.group(1)), submit
+            elif c["user"]["login"] == issue["user"]["login"] and body.strip().lower().startswith("/submit"):
+                submit = c
+        if not final or not final_submit:
+            continue
+        rec = final["result"]
+        case = Case(key, final["nim"], final["scenario"], course["year"])
+        scenario = bank[final["scenario"]]
+        answers = parse_submission(final_submit["body"])
+        asm = assemble(case, scenario, final["decisions"], course)
+        result = grade(scenario, asm, answers)
+        band = grade_for(result["pct"], course)
+        student = {"nim": final["nim"], "name": final["name"]}
+        slug = re.sub(r"[^A-Za-z0-9]+", "_", final["name"]).strip("_")
+        folder = out / f"{final['nim']}_{slug}"
+        report.write_debrief(folder, case, scenario, asm, result, band, student, answers["catatan"], course,
+                             datetime.fromisoformat(rec["dikirim"]), rec["terlambat"], final["login"])
+        page = next(folder.glob("*-debrief/DEBRIEF.html")).relative_to(out).as_posix()
+        rows.append({**rec, "page": page, "issue": issue["html_url"], "cocok": result["score"] == rec["skor"]})
+    rows.sort(key=lambda r: r["nim"])
+    write_index(out, rows, course)
+    mismatch = [r["nim"] for r in rows if not r["cocok"]]
+    print(f"{len(rows)} laporan → {out / 'index.html'}" + (f"  (skor berbeda: {mismatch})" if mismatch else ""))
+
+
+def write_index(out: Path, rows: list[dict], course: dict):
+    e = html.escape
+    avg = sum(r["skor"] for r in rows) / len(rows) if rows else 0
+    body = "".join(
+        f"<tr><td>{e(r['nim'])}</td><td>{e(r['nama'])}</td><td>{e(r['skenario'])}</td>"
+        f"<td class=n>{r['skor']}</td><td class=n><b>{e(r['grade'])}</b></td>"
+        f"<td>{'Terlambat' if r['terlambat'] else 'Tepat waktu'}</td><td>{e(r['dikirim'][:16].replace('T', ' '))}</td>"
+        f"<td><a href=\"{e(r['page'])}\">Debrief</a> · <a href=\"{e(r['issue'])}\">Issue</a></td></tr>"
+        for r in rows)
+    (out / "index.html").write_text(f"""<!doctype html><html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Laporan Kelas</title><style>{report.CSS}
+td.n{{text-align:center}}</style></head><body><main>
+<header class="cover"><div class="tag">{e(course['course'])} · {e(course['module'])}</div>
+<h1>Laporan Kelas</h1><p>{e(course['institution'])} · {e(course['semester'])}</p>
+<div class="kpis"><div class="kpi"><span>Laporan masuk</span><b>{len(rows)}</b></div>
+<div class="kpi"><span>Rata-rata skor</span><b>{avg:.1f}</b></div>
+<div class="kpi"><span>Terlambat</span><b>{sum(1 for r in rows if r['terlambat'])}</b></div></div></header>
+<table><thead><tr><th>NIM</th><th>Nama</th><th>Skenario</th><th>Skor</th><th>Grade</th><th>Status</th>
+<th>Dikirim (WIB)</th><th>Dokumen</th></tr></thead><tbody>{body}</tbody></table>
+</main></body></html>""", encoding="utf-8")
+
+
 def main():
     p = argparse.ArgumentParser(prog="python -m irsim")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -225,11 +292,11 @@ def main():
     pv.add_argument("--out", default="preview")
     st = sub.add_parser("selftest")
     st.add_argument("-n", type=int, default=6)
-    for name in ("setup", "rekap"):
+    for name in ("setup", "rekap", "laporan"):
         sp = sub.add_parser(name)
         sp.add_argument("--repo", required=True)
-        if name == "rekap":
-            sp.add_argument("--out", default="rekap")
+        if name != "setup":
+            sp.add_argument("--out", default=name)
     args = p.parse_args()
 
     if args.cmd == "keygen":
@@ -251,6 +318,8 @@ def main():
         cmd_setup(args)
     elif args.cmd == "rekap":
         cmd_rekap(args)
+    elif args.cmd == "laporan":
+        cmd_laporan(args)
 
 
 if __name__ == "__main__":

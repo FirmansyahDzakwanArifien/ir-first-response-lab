@@ -7,6 +7,7 @@ roster*.csv
 out/
 preview/
 rekap/
+laporan/
 
 __pycache__/
 *.pyc

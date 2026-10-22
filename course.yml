@@ -17,7 +17,7 @@ incident_window: [2026-09-07, 2026-11-27]
 
 # Batas waktu (ISO 8601) atau null. Setelah tenggat, kasus baru ditolak dan
 # laporan yang masuk ditandai terlambat.
-deadline: null
+deadline: 2026-10-24T23:59:00+07:00
 
 # Berapa kali /submit boleh dikirim per kasus.
 max_submissions: 1
