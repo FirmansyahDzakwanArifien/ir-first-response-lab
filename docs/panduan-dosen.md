@@ -28,7 +28,7 @@ gh secret set IRSIM_KEY < .irsim.key
 
 - `.irsim.key` dan folder `bank/` sudah di-`.gitignore`. **Simpan cadangan `.irsim.key`** di
   tempat aman; tanpa kunci ini `bank.sealed` tidak dapat dibuka.
-- Opsional, batasi peserta: simpan daftar NIM (satu per baris, boleh `NIM,Nama`) sebagai secret
+- Opsional, batasi peserta: simpan daftar NIM (satu per baris; boleh diikuti nama, dipisah koma/tab/spasi) sebagai secret
   `IRSIM_ROSTER`.
 
   ```bash

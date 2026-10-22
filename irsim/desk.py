@@ -138,7 +138,8 @@ class Desk:
         name = clean_name(form.get("nama lengkap", ""))
         reject = None
         dl = self.deadline()
-        roster = {ln.split(",")[0].strip() for ln in os.environ.get("IRSIM_ROSTER", "").splitlines() if ln.strip()}
+        roster = {re.split(r"[,;\s]+", ln.strip())[0] for ln in os.environ.get("IRSIM_ROSTER", "").splitlines()
+                  if ln.strip()}
         if dl and now_wib() > dl:
             reject = "Periode penugasan sudah ditutup."
         elif not NIM_RE.match(nim):
