@@ -1,0 +1,85 @@
+name: Meja Kasus IR
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ir-case-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  desk:
+    name: Proses kasus
+    if: >-
+      !github.event.issue.pull_request &&
+      startsWith(github.event.issue.title, '[IR') &&
+      (github.event_name == 'issues' ||
+       (startsWith(github.event.comment.body, '/') && github.event.comment.user.type != 'Bot'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Proses permintaan
+        id: desk
+        run: python -m irsim.desk handle
+        env:
+          IRSIM_KEY: ${{ secrets.IRSIM_KEY }}
+          IRSIM_ROSTER: ${{ secrets.IRSIM_ROSTER }}
+          IRSIM_SEALED_ONLY: "1"
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Unggah paket bukti
+        id: pack
+        if: steps.desk.outputs.pack_dir != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.desk.outputs.pack_name }}
+          path: ${{ steps.desk.outputs.pack_dir }}
+          retention-days: 30
+          overwrite: true
+
+      - name: Unggah debrief
+        id: debrief
+        if: steps.desk.outputs.debrief_dir != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.desk.outputs.debrief_name }}
+          path: ${{ steps.desk.outputs.debrief_dir }}
+          retention-days: 90
+          overwrite: true
+
+      - name: Balas issue
+        if: steps.desk.outputs.reply != ''
+        run: python -m irsim.desk reply
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PACK_NAME: ${{ steps.desk.outputs.pack_name }}
+          PACK_URL: ${{ steps.pack.outputs.artifact-url }}
+          DEBRIEF_NAME: ${{ steps.desk.outputs.debrief_name }}
+          DEBRIEF_URL: ${{ steps.debrief.outputs.artifact-url }}
+
+      - name: Laporkan kendala
+        if: failure()
+        run: python -m irsim.desk fail
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

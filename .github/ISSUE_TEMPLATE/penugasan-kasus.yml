@@ -1,0 +1,33 @@
+name: Penugasan Kasus IR
+description: Buka kasus insiden baru untuk simulasi First Response.
+title: "[IR] Penugasan kasus"
+labels: ["ir-case"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Setelah issue dibuat, sistem akan membalas dengan **briefing insiden** dan lima keputusan
+        yang harus Anda ambil di TKP. Seluruh simulasi berlangsung di issue ini.
+
+        Data di bawah ini tampil publik di repositori kelas.
+  - type: input
+    id: nim
+    attributes:
+      label: NIM
+      placeholder: "0110224001"
+    validations:
+      required: true
+  - type: input
+    id: nama
+    attributes:
+      label: Nama lengkap
+      placeholder: Nama sesuai SIAKAD
+    validations:
+      required: true
+  - type: checkboxes
+    id: pernyataan
+    attributes:
+      label: Pernyataan
+      options:
+        - label: Saya mengerjakan kasus ini secara mandiri dan tidak membagikan jawaban kepada peserta lain.
+          required: true

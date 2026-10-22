@@ -1,0 +1,14 @@
+# Rahasia — jangan pernah di-commit
+.irsim.key
+bank/
+roster*.csv
+
+# Keluaran lokal
+out/
+preview/
+rekap/
+
+__pycache__/
+*.pyc
+.venv/
+venv/

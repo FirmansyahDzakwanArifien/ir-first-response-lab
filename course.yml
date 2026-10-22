@@ -1,0 +1,31 @@
+# Pengaturan mata kuliah. Ubah file ini lalu commit; berlaku untuk kasus berikutnya.
+
+course: Incident Response
+module: First Response
+institution: STT Nurul Fikri
+lecturer: Tubagus Rizky Dharmawan, S.T., M.Sc.
+semester: Ganjil 2026/2027
+year: 2026
+
+# auto = skenario dibagi otomatis per NIM (merata & deterministik),
+# atau isi salah satu id skenario agar semua mahasiswa mendapat skenario yang sama.
+scenario_assignment: auto
+scenario_pool: [ransomware-fileserver, webshell-compromise, insider-threat-exfil]
+
+# Rentang tanggal fiktif kejadian insiden.
+incident_window: [2026-09-07, 2026-11-27]
+
+# Batas waktu (ISO 8601) atau null. Setelah tenggat, kasus baru ditolak dan
+# laporan yang masuk ditandai terlambat.
+deadline: null
+
+# Berapa kali /submit boleh dikirim per kasus.
+max_submissions: 1
+
+grading:
+  - {min: 85, grade: A,  badge: Expert First Responder, message: Keputusan dan analisis Anda sejalan dengan praktik forensik yang baik. Bukti terjaga dan temuan akurat.}
+  - {min: 75, grade: AB, badge: Proficient Responder, message: Fondasi kuat. Beberapa detail perlu dipertajam agar setiap bukti benar-benar termanfaatkan.}
+  - {min: 65, grade: B,  badge: Competent Responder, message: Pemahaman dasar sudah ada, namun ada keputusan atau analisis yang membuat bukti penting terlewat.}
+  - {min: 55, grade: BC, badge: Developing Responder, message: Beberapa keputusan merusak atau menghilangkan bukti. Pelajari kembali pembahasan di bawah.}
+  - {min: 45, grade: C,  badge: Responder in Training, message: Banyak bukti kunci hilang atau tidak teranalisis. Ulangi materi order of volatility dan preservasi bukti.}
+  - {min: 0,  grade: D,  badge: Critical Errors, message: Keputusan di TKP menghancurkan sebagian besar bukti. Pelajari kembali seluruh materi First Response.}

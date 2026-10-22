@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Panduan mahasiswa
+    url: https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/blob/main/docs/panduan-mahasiswa.md
+    about: Baca alur simulasi, format perintah, dan tips analisis sebelum memulai.
