@@ -1,6 +1,6 @@
 # Panduan Mahasiswa
 
-> **Tonton dulu video panduannya (±4,5 menit, tanpa suara):** [Panduan_Praktikum_IR_First_Response.mp4](https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/releases/download/panduan-v1/Panduan_Praktikum_IR_First_Response.mp4)
+> **Tonton dulu video panduannya (±4 menit, tanpa suara):** [Panduan_Praktikum_IR_First_Response.mp4](https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/releases/download/panduan-v1/Panduan_Praktikum_IR_First_Response.mp4)
 > Seluruh langkah di bawah diperagakan di video, mulai dari membuka kasus sampai membaca debrief.
 >
 > **Tenggat: Sabtu, 24 Oktober 2026 · 23.59 WIB.** Setelah tenggat, kasus baru ditolak dan laporan ditandai terlambat.

@@ -50,7 +50,7 @@ Grade dan predikat diatur di [`course.yml`](course.yml).
 
 ## Mulai
 
-> **Video panduan praktikum (±4,5 menit):** [tonton / unduh MP4](https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/releases/download/panduan-v1/Panduan_Praktikum_IR_First_Response.mp4) · [halaman rilis](https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/releases/tag/panduan-v1)
+> **Video panduan praktikum (±4 menit):** [tonton / unduh MP4](https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/releases/download/panduan-v1/Panduan_Praktikum_IR_First_Response.mp4) · [halaman rilis](https://github.com/FirmansyahDzakwanArifien/ir-first-response-lab/releases/tag/panduan-v1)
 
 - **Mahasiswa** → [Panduan mahasiswa](docs/panduan-mahasiswa.md), lalu buka
   [issue baru](../../issues/new/choose) dengan template **Penugasan Kasus IR**.
