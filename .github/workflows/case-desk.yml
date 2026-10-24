@@ -21,7 +21,7 @@ jobs:
       !github.event.issue.pull_request &&
       startsWith(github.event.issue.title, '[IR') &&
       (github.event_name == 'issues' ||
-       ((startsWith(github.event.comment.body, '/') || contains(github.event.comment.body, 'D1')) &&
+       ((contains(github.event.comment.body, '/') || contains(github.event.comment.body, 'D1')) &&
         github.event.comment.user.type != 'Bot'))
     runs-on: ubuntu-latest
     timeout-minutes: 10

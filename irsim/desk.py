@@ -203,8 +203,11 @@ class Desk:
         # keputusan tanpa baris /respond tetap diterima selama masih fase 1
         if not cmd.startswith("/") and st["stage"] == "fase1" and DECISION_LINE.search(body):
             cmd = "/respond"
-        # komentar yang diedit hanya diproses bila masih menunggu keputusan
-        if self.event.get("action") == "edited" and not (cmd == "/respond" and st["stage"] == "fase1"):
+        # komentar yang diedit hanya diproses bila perintahnya belum pernah diterima
+        pending = (cmd == "/respond" and st["stage"] == "fase1") or (
+            cmd == "/submit" and st["stage"] == "fase2"
+            and st.get("submissions", 0) < int(self.course.get("max_submissions", 1)))
+        if self.event.get("action") == "edited" and not pending:
             return
         if not cmd.startswith("/"):
             return
