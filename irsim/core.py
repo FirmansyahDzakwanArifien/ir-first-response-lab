@@ -97,10 +97,12 @@ class Case:
     nim: str
     scenario: str
     year: int
+    remedial: bool = False
 
     @property
     def case_id(self) -> str:
-        code = base64.b32encode(_mac(self.key, f"case|{self.nim}")).decode()
+        label = f"case|{self.nim}|remedial" if self.remedial else f"case|{self.nim}"
+        code = base64.b32encode(_mac(self.key, label)).decode()
         code = code.replace("O", "Q").replace("I", "J")[:5]
         return f"IR-{self.year % 100:02d}-{code}"
 
@@ -140,8 +142,16 @@ def now_wib() -> datetime:
     return datetime.now(WIB)
 
 
-def grade_for(pct: float, course: dict) -> dict:
-    for band in course["grading"]:
-        if pct >= band["min"]:
-            return band
-    return course["grading"][-1]
+def grade_for(pct: float, course: dict, cap: str | None = None) -> dict:
+    bands = course["grading"]
+    band = next((b for b in bands if pct >= b["min"]), bands[-1])
+    # grade maksimal (kasus remedial): band yang lebih tinggi diturunkan ke band batas
+    limit = next((b for b in bands if b["grade"] == cap), None)
+    if limit and bands.index(band) < bands.index(limit):
+        return limit
+    return band
+
+
+def remedial_for(course: dict, nim: str) -> dict | None:
+    """Entri remedial untuk NIM ini di course.yml, atau None."""
+    return next((r for r in course.get("remedial") or [] if str(r.get("nim")) == nim), None)

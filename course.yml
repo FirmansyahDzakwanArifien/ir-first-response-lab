@@ -22,6 +22,11 @@ deadline: 2026-10-24T23:59:00+07:00
 # Berapa kali /submit boleh dikirim per kasus.
 max_submissions: 1
 
+# Kasus remedial atas pengajuan mahasiswa. NIM yang tercantum boleh membuka satu
+# issue baru: skenario sesuai entri, grade dibatasi max_grade, tenggat tersendiri.
+remedial:
+  - {nim: "110225027", scenario: ransomware-fileserver, max_grade: B, deadline: 2026-10-31T23:59:00+07:00}
+
 grading:
   - {min: 85, grade: A,  badge: Expert First Responder, message: Keputusan dan analisis Anda sejalan dengan praktik forensik yang baik. Bukti terjaga dan temuan akurat.}
   - {min: 75, grade: AB, badge: Proficient Responder, message: Fondasi kuat. Beberapa detail perlu dipertajam agar setiap bukti benar-benar termanfaatkan.}

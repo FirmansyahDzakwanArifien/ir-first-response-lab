@@ -237,15 +237,15 @@ def cmd_laporan(args):
         if not final or not final_submit:
             continue
         rec = final["result"]
-        case = Case(key, final["nim"], final["scenario"], course["year"])
+        case = Case(key, final["nim"], final["scenario"], course["year"], bool(final.get("remedial")))
         scenario = bank[final["scenario"]]
         answers = parse_submission(final_submit["body"])
         asm = assemble(case, scenario, final["decisions"], course)
         result = grade(scenario, asm, answers)
-        band = grade_for(result["pct"], course)
+        band = grade_for(result["pct"], course, final.get("max_grade"))
         student = {"nim": final["nim"], "name": final["name"]}
         slug = re.sub(r"[^A-Za-z0-9]+", "_", final["name"]).strip("_")
-        folder = out / f"{final['nim']}_{slug}"
+        folder = out / (f"{final['nim']}_{slug}" + ("_remedial" if final.get("remedial") else ""))
         report.write_debrief(folder, case, scenario, asm, result, band, student, answers["catatan"], course,
                              datetime.fromisoformat(rec["dikirim"]), rec["terlambat"], final["login"])
         page = next(folder.glob("*-debrief/DEBRIEF.html")).relative_to(out).as_posix()
@@ -260,7 +260,7 @@ def write_index(out: Path, rows: list[dict], course: dict):
     e = html.escape
     avg = sum(r["skor"] for r in rows) / len(rows) if rows else 0
     body = "".join(
-        f"<tr><td>{e(r['nim'])}</td><td>{e(r['nama'])}</td><td>{e(r['skenario'])}</td>"
+        f"<tr><td>{e(r['nim'])}</td><td>{e(r['nama'])}{' (remedial)' if r.get('remedial') else ''}</td><td>{e(r['skenario'])}</td>"
         f"<td class=n>{r['skor']}</td><td class=n><b>{e(r['grade'])}</b></td>"
         f"<td>{'Terlambat' if r['terlambat'] else 'Tepat waktu'}</td><td>{e(r['dikirim'][:16].replace('T', ' '))}</td>"
         f"<td><a href=\"{e(r['page'])}\">Debrief</a> · <a href=\"{e(r['issue'])}\">Issue</a></td></tr>"

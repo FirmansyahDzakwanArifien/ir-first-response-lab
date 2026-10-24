@@ -18,7 +18,7 @@ import yaml
 
 from . import render, report
 from .core import (LETTERS, ROOT, Case, DeskError, assign_scenario, grade_for, load_bank, load_course,
-                   load_key, now_wib)
+                   load_key, now_wib, remedial_for)
 from .gh import BOT, GitHub
 from .grading import grade
 from .scenarios import assemble
@@ -28,6 +28,7 @@ MARK = re.compile(r"<!-- irsim:state (\{.*?\}) -->", re.S)
 LABEL_CASE, LABEL_F1, LABEL_F2 = "ir-case", "fase-1: tkp", "fase-2: analisis"
 LABEL_DONE, LABEL_REJECT, LABEL_LATE = "selesai", "ditolak", "terlambat"
 NIM_RE = re.compile(r"^\d{6,15}$")
+REMEDIAL_TAG = " · Remedial"
 
 
 # ── Utilitas kasus (dipakai juga oleh CLI lokal) ─────────────────────────────
@@ -127,11 +128,11 @@ class Desk:
         self.outputs["reply"] = "out/reply.md"
 
     def case_of(self, st: dict) -> tuple[Case, dict]:
-        case = Case(self.key, st["nim"], st["scenario"], self.course["year"])
+        case = Case(self.key, st["nim"], st["scenario"], self.course["year"], bool(st.get("remedial")))
         return case, self.bank[st["scenario"]]
 
-    def deadline(self) -> datetime | None:
-        d = self.course.get("deadline")
+    def deadline(self, rem: dict | None = None) -> datetime | None:
+        d = (rem or {}).get("deadline") or self.course.get("deadline")
         return datetime.fromisoformat(str(d)) if d else None
 
     # ── issue dibuka ─────────────────────────────────────────────────────────
@@ -140,7 +141,8 @@ class Desk:
         nim = re.sub(r"\s", "", form.get("nim", ""))
         name = clean_name(form.get("nama lengkap", ""))
         reject = None
-        dl = self.deadline()
+        rem = remedial_for(self.course, nim)
+        dl = self.deadline(rem)
         roster = {re.split(r"[,;\s]+", ln.strip())[0] for ln in os.environ.get("IRSIM_ROSTER", "").splitlines()
                   if ln.strip()}
         if dl and now_wib() > dl:
@@ -157,6 +159,9 @@ class Desk:
                     continue
                 if any(lb["name"] == LABEL_REJECT for lb in other["labels"]):
                     continue
+                # mahasiswa remedial boleh memiliki satu kasus lagi di samping kasus pertamanya
+                if rem and f"] {nim} ·" in other["title"] and not other["title"].endswith(REMEDIAL_TAG):
+                    continue
                 if f"] {nim} ·" in other["title"]:
                     reject = f"NIM {nim} sudah memiliki kasus di #{other['number']}. Lanjutkan di issue tersebut."
                     break
@@ -167,14 +172,21 @@ class Desk:
             self.respond(f"### Penugasan tidak dapat diproses\n\n{reject}")
             self.after = {"labels_add": [LABEL_REJECT], "close": "not_planned"}
             return
-        scenario_id = assign_scenario(self.key, nim, self.course)
-        case = Case(self.key, nim, scenario_id, self.course["year"])
+        scenario_id = rem["scenario"] if rem else assign_scenario(self.key, nim, self.course)
+        case = Case(self.key, nim, scenario_id, self.course["year"], bool(rem))
         scenario = self.bank[scenario_id]
         facts = facts_for(case, scenario, self.course)
         st = {"v": 1, "stage": "fase1", "nim": nim, "name": name, "login": self.login, "scenario": scenario_id,
               "case_id": case.case_id, "opened": now_wib().isoformat(timespec="seconds")}
-        self.respond(render.briefing_comment(case, scenario, facts, self.login, self.course), st)
-        self.after = {"title": f"[{case.case_id}] {nim} · {name}", "labels_add": [LABEL_CASE, LABEL_F1]}
+        body = render.briefing_comment(case, scenario, facts, self.login, self.course)
+        title = f"[{case.case_id}] {nim} · {name}"
+        if rem:
+            st.update(remedial=True, max_grade=rem.get("max_grade"))
+            note = f"> **Kasus remedial.** Grade maksimal **{rem.get('max_grade')}**"
+            note += f", tenggat {dl:%d-%m-%Y %H:%M} WIB." if dl else "."
+            body, title = f"{note}\n\n{body}", title + REMEDIAL_TAG
+        self.respond(body, st)
+        self.after = {"title": title, "labels_add": [LABEL_CASE, LABEL_F1]}
 
     # ── komentar ─────────────────────────────────────────────────────────────
     def command(self):
@@ -246,9 +258,9 @@ class Desk:
         case, scenario = self.case_of(st)
         asm = assemble(case, scenario, st["decisions"], self.course)
         result = grade(scenario, asm, answers)
-        band = grade_for(result["pct"], self.course)
+        band = grade_for(result["pct"], self.course, st.get("max_grade"))
         issued = now_wib()
-        dl = self.deadline()
+        dl = self.deadline(remedial_for(self.course, st["nim"]) if st.get("remedial") else None)
         late = bool(dl and issued > dl)
         student = {"nim": st["nim"], "name": st["name"]}
         target = OUT / "debrief"
@@ -258,8 +270,13 @@ class Desk:
         self.outputs.update(debrief_dir="out/debrief", debrief_name=f"debrief-{case.case_id}")
         used = st.get("submissions", 0) + 1
         record = report.score_record(case, scenario, result, band, student, self.login, issued, late)
+        if st.get("remedial"):
+            record["remedial"] = True
         st = {**st, "stage": "selesai" if used >= limit else "fase2", "submissions": used, "result": record}
-        self.respond(render.score_comment(case, result, band, late), st)
+        body = render.score_comment(case, result, band, late)
+        if st.get("remedial"):
+            body += f"\n\n<sub>Kasus remedial: grade dibatasi maksimal {st.get('max_grade')}.</sub>"
+        self.respond(body, st)
         self.after = {"labels_add": [LABEL_LATE] if late else []}
         if used >= limit:
             self.after["labels_add"].append(LABEL_DONE)
