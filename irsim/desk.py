@@ -52,9 +52,12 @@ def parse_form(body: str) -> dict[str, str]:
     return {k: ("" if v == "_No response_" else v) for k, v in fields.items()}
 
 
+DECISION_LINE = re.compile(r"^\s*D\d\s*[:=;.]\s*[A-Da-d]\b", re.M)
+
+
 def parse_decisions(body: str, scenario: dict) -> dict[str, str]:
     found = {m.group(1).upper(): m.group(2).upper()
-             for m in re.finditer(r"^\s*(D\d)\s*[:=]\s*([A-Da-d])\b", body, re.M)}
+             for m in re.finditer(r"^\s*(D\d)\s*[:=;.]\s*([A-Da-d])\b", body, re.M)}
     ids = [d["id"] for d in scenario["decisions"]]
     missing = [i for i in ids if i not in found]
     if missing:
@@ -184,6 +187,14 @@ class Desk:
         cmd = body.split(None, 1)[0].lower() if body else ""
         st = self.state()
         if st is None:
+            return
+        # keputusan tanpa baris /respond tetap diterima selama masih fase 1
+        if not cmd.startswith("/") and st["stage"] == "fase1" and DECISION_LINE.search(body):
+            cmd = "/respond"
+        # komentar yang diedit hanya diproses bila masih menunggu keputusan
+        if self.event.get("action") == "edited" and not (cmd == "/respond" and st["stage"] == "fase1"):
+            return
+        if not cmd.startswith("/"):
             return
         handlers = {"/respond": self.cmd_respond, "/submit": self.cmd_submit, "/paket": self.cmd_pack,
                     "/bantuan": self.cmd_help, "/help": self.cmd_help}
