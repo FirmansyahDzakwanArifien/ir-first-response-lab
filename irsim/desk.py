@@ -72,7 +72,9 @@ def parse_submission(body: str) -> dict:
     text = "\n".join(lines)
     text = re.sub(r"^\s*/submit\s*$", "", text, count=1, flags=re.M)
     try:
-        data = yaml.safe_load(text)
+        # BaseLoader: semua nilai dibaca apa adanya sebagai teks. safe_load (YAML 1.1) mengubah
+        # jam seperti 19:40:29 menjadi bilangan basis-60 (70829) sehingga jawaban waktu salah dinilai.
+        data = yaml.load(text, Loader=yaml.BaseLoader)
     except yaml.YAMLError as err:
         mark = getattr(err, "problem_mark", None)
         where = f" (baris {mark.line + 1})" if mark else ""
@@ -261,9 +263,12 @@ class Desk:
         case, scenario = self.case_of(st)
         asm = assemble(case, scenario, st["decisions"], self.course)
         result = grade(scenario, asm, answers)
-        band = grade_for(result["pct"], self.course, st.get("max_grade"))
+        rem = remedial_for(self.course, st["nim"]) if st.get("remedial") else None
+        # batas grade mengikuti course.yml terkini, state hanya cadangan
+        cap = (rem or {}).get("max_grade", st.get("max_grade"))
+        band = grade_for(result["pct"], self.course, cap)
         issued = now_wib()
-        dl = self.deadline(remedial_for(self.course, st["nim"]) if st.get("remedial") else None)
+        dl = self.deadline(rem)
         late = bool(dl and issued > dl)
         student = {"nim": st["nim"], "name": st["name"]}
         target = OUT / "debrief"
@@ -278,7 +283,7 @@ class Desk:
         st = {**st, "stage": "selesai" if used >= limit else "fase2", "submissions": used, "result": record}
         body = render.score_comment(case, result, band, late)
         if st.get("remedial"):
-            body += f"\n\n<sub>Kasus remedial: grade dibatasi maksimal {st.get('max_grade')}.</sub>"
+            body += f"\n\n<sub>Kasus remedial: grade dibatasi maksimal {cap}.</sub>"
         self.respond(body, st)
         self.after = {"labels_add": [LABEL_LATE] if late else []}
         if used >= limit:

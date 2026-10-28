@@ -148,7 +148,7 @@ def grade_for(pct: float, course: dict, cap: str | None = None) -> dict:
     # grade maksimal (kasus remedial): band yang lebih tinggi diturunkan ke band batas
     limit = next((b for b in bands if b["grade"] == cap), None)
     if limit and bands.index(band) < bands.index(limit):
-        return limit
+        return {**band, "grade": limit["grade"]}
     return band
 
 

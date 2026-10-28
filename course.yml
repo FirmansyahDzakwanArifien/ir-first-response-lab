@@ -26,12 +26,16 @@ max_submissions: 1
 # issue baru: skenario sesuai entri, grade dibatasi max_grade. Tanpa `deadline`
 # pada entri, tenggat mengikuti `deadline` di atas.
 remedial:
-  - {nim: "110225027", scenario: ransomware-fileserver, max_grade: B}
+  - {nim: "110225027", scenario: ransomware-fileserver, max_grade: A-}
+  - {nim: "110225023", scenario: webshell-compromise, max_grade: B-, deadline: 2026-10-28T23:59:00+07:00}
+  - {nim: "110225044", scenario: insider-threat-exfil, max_grade: B-, deadline: 2026-10-28T23:59:00+07:00}
+  - {nim: "110225087", scenario: ransomware-fileserver, max_grade: B-, deadline: 2026-10-28T23:59:00+07:00}
+  - {nim: "110225172", scenario: insider-threat-exfil, max_grade: B-, deadline: 2026-10-28T23:59:00+07:00}
 
 grading:
-  - {min: 85, grade: A,  badge: Expert First Responder, message: Keputusan dan analisis Anda sejalan dengan praktik forensik yang baik. Bukti terjaga dan temuan akurat.}
-  - {min: 75, grade: AB, badge: Proficient Responder, message: Fondasi kuat. Beberapa detail perlu dipertajam agar setiap bukti benar-benar termanfaatkan.}
-  - {min: 65, grade: B,  badge: Competent Responder, message: Pemahaman dasar sudah ada, namun ada keputusan atau analisis yang membuat bukti penting terlewat.}
-  - {min: 55, grade: BC, badge: Developing Responder, message: Beberapa keputusan merusak atau menghilangkan bukti. Pelajari kembali pembahasan di bawah.}
-  - {min: 45, grade: C,  badge: Responder in Training, message: Banyak bukti kunci hilang atau tidak teranalisis. Ulangi materi order of volatility dan preservasi bukti.}
-  - {min: 0,  grade: D,  badge: Critical Errors, message: Keputusan di TKP menghancurkan sebagian besar bukti. Pelajari kembali seluruh materi First Response.}
+  - {min: 85, grade: A+, badge: Expert First Responder, message: Keputusan dan analisis Anda sejalan dengan praktik forensik yang baik. Bukti terjaga dan temuan akurat.}
+  - {min: 75, grade: A,  badge: Proficient Responder, message: Fondasi kuat. Beberapa detail perlu dipertajam agar setiap bukti benar-benar termanfaatkan.}
+  - {min: 65, grade: A-, badge: Competent Responder, message: Pemahaman dasar sudah ada, namun ada keputusan atau analisis yang membuat bukti penting terlewat.}
+  - {min: 55, grade: B+, badge: Developing Responder, message: Beberapa keputusan merusak atau menghilangkan bukti. Pelajari kembali pembahasan di bawah.}
+  - {min: 45, grade: B,  badge: Responder in Training, message: Banyak bukti kunci hilang atau tidak teranalisis. Ulangi materi order of volatility dan preservasi bukti.}
+  - {min: 0,  grade: B-, badge: Critical Errors, message: Keputusan di TKP menghancurkan sebagian besar bukti. Pelajari kembali seluruh materi First Response.}

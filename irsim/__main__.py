@@ -26,7 +26,7 @@ from cryptography.fernet import Fernet
 
 from . import render, report
 from .core import (LETTERS, ROOT, SCENARIOS, Case, assign_scenario, grade_for, load_bank, load_course, load_key,
-                   now_wib, seal_bank, unseal_bank)
+                   now_wib, remedial_for, seal_bank, unseal_bank)
 from .desk import (BOT, LABEL_CASE, LABEL_DONE, LABEL_F1, LABEL_F2, LABEL_LATE, LABEL_REJECT, MARK,
                    correct_letters, facts_for, parse_submission)
 from .gh import GitHub
@@ -242,7 +242,8 @@ def cmd_laporan(args):
         answers = parse_submission(final_submit["body"])
         asm = assemble(case, scenario, final["decisions"], course)
         result = grade(scenario, asm, answers)
-        band = grade_for(result["pct"], course, final.get("max_grade"))
+        rem = remedial_for(course, final["nim"]) if final.get("remedial") else None
+        band = grade_for(result["pct"], course, (rem or {}).get("max_grade", final.get("max_grade")))
         student = {"nim": final["nim"], "name": final["name"]}
         slug = re.sub(r"[^A-Za-z0-9]+", "_", final["name"]).strip("_")
         folder = out / (f"{final['nim']}_{slug}" + ("_remedial" if final.get("remedial") else ""))
